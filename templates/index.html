@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCE Chatbot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f7c600, #ffd83d);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 500px;
+            height: 680px;
+            background: #ffd21c;
+            border-radius: 22px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 3px solid #123c69;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #062b59, #124d8c);
+            color: white;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 5px solid #f7c600;
+        }
+
+        .logo {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            background: white;
+            border-radius: 50%;
+            padding: 3px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+        }
+
+        .header-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        #chat {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: linear-gradient(180deg, #ffd21c, #ffdb45);
+        }
+
+        .message {
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            border-radius: 16px;
+            max-width: 82%;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-size: 15px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .user {
+            background: #123c69;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot {
+            background: #fff4bd;
+            color: #092f5b;
+            margin-right: auto;
+            border: 1px solid rgba(18, 60, 105, 0.15);
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #062b59;
+            border-top: 4px solid #f7c600;
+        }
+
+        #question {
+            flex: 1;
+            padding: 13px 16px;
+            border: 2px solid #e5b900;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            background: #fffdf2;
+            color: #123c69;
+        }
+
+        #question:focus {
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(247, 198, 0, 0.5);
+        }
+
+        #question::placeholder {
+            color: #777;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: #f7c600;
+            color: #062b59;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            background: #ffffff;
+            transform: scale(1.04);
+        }
+
+        button:disabled {
+            background: #999;
+            color: white;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #chat::-webkit-scrollbar {
+            width: 7px;
+        }
+
+        #chat::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.2);
+        }
+
+        #chat::-webkit-scrollbar-thumb {
+            background: #123c69;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .chat-container {
+                width: 100%;
+                height: 95vh;
+                border-radius: 18px;
+            }
+
+            .header h2 {
+                font-size: 20px;
+            }
+
+            .header p {
+                font-size: 11px;
+            }
+
+            .logo {
+                width: 55px;
+                height: 55px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+    <div class="header">
+        <img
+            src="/static/logo.jpg.jpeg"
+            class="logo"
+            alt="Kings College Logo"
+        >
+
+        <div class="header-text">
+            <h2>KCE Chatbot</h2>
+            <p>Kings College of Engineering</p>
+        </div>
+    </div>
+
+    <div id="chat">
+        <div class="message bot">
+            Hello! 👋<br><br>
+            I'm KCE Chatbot, your virtual assistant for Kings College of Engineering.<br><br>
+            How can I help you today?
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input
+            type="text"
+            id="question"
+            placeholder="Ask your question..."
+        >
+
+        <button
+            id="sendButton"
+            onclick="askQuestion()"
+        >
+            Send
+        </button>
+    </div>
+
+</div>
+
+<script>
+const questionInput = document.getElementById("question");
+const sendButton = document.getElementById("sendButton");
+const chat = document.getElementById("chat");
+
+async function askQuestion() {
+    const question = questionInput.value.trim();
+
+    if (!question) {
+        return;
+    }
+
+    addMessage(question, "user");
+    questionInput.value = "";
+    sendButton.disabled = true;
+
+    const thinkingMessage = addMessage("Thinking...", "bot");
+
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                question: question
+            })
+        });
+
+        const data = await response.json();
+
+        thinkingMessage.remove();
+        addMessage(data.answer, "bot");
+
+    } catch (error) {
+        thinkingMessage.remove();
+        addMessage("Sorry, something went wrong.", "bot");
+        console.error(error);
+    }
+
+    finally {
+        sendButton.disabled = false;
+        questionInput.focus();
+    }
+}
+
+function addMessage(text, type) {
+    const message = document.createElement("div");
+
+    message.className = "message " + type;
+
+    message.innerHTML = text.replace(/\n/g, "<br>");
+
+    chat.appendChild(message);
+
+    chat.scrollTop = chat.scrollHeight;
+
+    return message;
+}
+
+questionInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        askQuestion();
+    }
+});
+</script>
+
+</body>
+</html>
