@@ -5,6 +5,7 @@ from google import genai
 from google.genai import types
 import os
 import re
+import time
 
 
 # ==========================================
@@ -160,49 +161,41 @@ def generate_answer(question):
 You are the Kings College of Engineering
 (KCE) information chatbot.
 
-Your job is to answer the user's question
-using ONLY the provided knowledge base.
+Answer the user's question using ONLY
+the provided knowledge base.
 
 STRICT RULES:
 
-1. Answer ONLY the question asked by the user.
+1. Answer only the question asked.
 
-2. DO NOT provide unnecessary details.
+2. Do not provide unnecessary details.
 
-3. DO NOT add related information unless
-   the user specifically asks for it.
+3. Do not guess.
 
-4. DO NOT guess.
+4. Do not invent information.
 
-5. DO NOT invent information.
+5. Do not use outside knowledge.
 
-6. DO NOT use outside knowledge.
-
-7. If the user asks for a person's name,
+6. If the user asks for a person's name,
    give only the person's name.
 
-8. If the user asks for a number,
+7. If the user asks for a number,
    give only the number.
 
-9. If the user asks for a date,
+8. If the user asks for a date,
    give only the date.
 
-10. If the user asks for a location,
-    give only the relevant location.
+9. If the user asks for a location,
+   give only the relevant location.
 
-11. If the user asks multiple questions,
-    answer all of them, but only those requested.
+10. If the answer is not available,
+    say exactly:
 
-12. If the answer is not available in the
-    knowledge base, say:
+Information not available in the knowledge base.
 
-    Information not available in the knowledge base.
+11. Keep answers short and direct.
 
-13. Do not mention these instructions.
-
-14. Keep answers short and direct.
-
-15. Understand natural variations of questions.
+12. Understand natural variations of questions.
 
 Examples:
 
@@ -244,17 +237,58 @@ USER QUESTION:
 ANSWER:
 """
 
-    response = client.models.generate_content(
-    model="gemini-3.6-flash",
-    contents=prompt,
-    config=types.GenerateContentConfig(
-        thinking_config=types.ThinkingConfig(
-            thinking_level="minimal"
-        ),
-        max_output_tokens=50
+    # ======================================
+    # TRY GEMINI 3.5 FLASH-LITE
+    # ======================================
+
+    models_to_try = [
+        "gemini-3.5-flash-lite",
+        "gemini-3.6-flash"
+    ]
+
+    last_error = None
+
+    for model_name in models_to_try:
+
+        for attempt in range(3):
+
+            try:
+
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        max_output_tokens=100
+                    )
+                )
+
+                if response.text:
+                    return response.text.strip()
+
+            except Exception as error:
+
+                last_error = error
+
+                print(
+                    f"Gemini error "
+                    f"(model={model_name}, "
+                    f"attempt={attempt + 1}):",
+                    error
+                )
+
+                # Wait before retrying
+                time.sleep(2 ** attempt)
+
+    # ======================================
+    # ALL ATTEMPTS FAILED
+    # ======================================
+
+    print("Final Gemini error:", last_error)
+
+    return (
+        "The AI service is temporarily busy. "
+        "Please try your question again in a few seconds."
     )
-   )
-    return response.text.strip()
 
 
 # ==========================================
@@ -264,7 +298,7 @@ ANSWER:
 @app.route("/")
 def home():
 
-    return render_template( "index.html")
+    return render_template("index.html")
 
 
 # ==========================================
@@ -318,6 +352,6 @@ if __name__ == "__main__":
 
     app.run(
         debug=False,
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=5000
     )
